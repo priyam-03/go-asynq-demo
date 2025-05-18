@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  go-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: go-backend
+    environment:
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      - redis
+    command: ["./app", "-mode=both", "-redis=redis:6379"]
+    restart: always
+
+  asynqmon:
+    image: hibiken/asynqmon
+    container_name: asynqmon
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      - redis
