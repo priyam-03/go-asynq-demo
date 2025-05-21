@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   redis:
@@ -6,17 +6,31 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data:/data
 
-  go-backend:
+  go-worker:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: go-backend
+    container_name: go-worker
     environment:
       - REDIS_ADDR=redis:6379
     depends_on:
       - redis
-    command: ["./app", "-mode=both", "-redis=redis:6379"]
+    command: ["./app", "-mode=worker", "-redis=redis:6379"]
+    restart: always
+
+  go-client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: go-client
+    environment:
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      - redis
+    command: ["./app", "-mode=client", "-redis=redis:6379"]
     restart: always
 
   asynqmon:
@@ -28,3 +42,6 @@ services:
       - REDIS_ADDR=redis:6379
     depends_on:
       - redis
+
+volumes:
+  redis-data:
